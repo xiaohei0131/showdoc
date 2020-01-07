@@ -1,0 +1,79 @@
+{{define "login.html"}}
+    {{template "header" .}}
+    <div class="container-fluid">
+        <div class="row align-items-center justify-content-center " style="height:100vh;">
+            <div class="col-md-4">
+                <div class="alert alert-danger" role="alert"></div>
+                <form>
+                    <div class="form-group row">
+                        <label for="username" class="col-sm-2 col-form-label">登录名</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="username" name="username" placeholder="请输入登录名">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="password" class="col-sm-2 col-form-label">密&nbsp;&nbsp;&nbsp;&nbsp;码</label>
+                        <div class="col-sm-10">
+                            <input type="password" class="form-control" id="password" name="password"
+                                   placeholder="请输入密码">
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-primary" id="loginBtn">登录</button>
+                        <button type="reset" class="btn btn-secondary" id="resetBtn">重置</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+        <script>
+
+            $(function () {
+                $(document).keydown(function (event) {
+                    if (event.keyCode == 13) {
+                        $('#loginBtn').triggerHandler('click');
+                    }
+                });
+                $(".alert-danger").hide();
+                $("#loginBtn").click(function () {
+                    var param = {
+                        "username":$("#username").val(),
+                        "password":$("#password").val()
+                    };
+                    if(param.username == ""){
+                        showError("请输入登录名")
+                        $("#username").focus()
+                        return
+                    }
+                    if(param.password == ""){
+                        showError("请输入密码")
+                        $("#password").focus()
+                        return
+                    }
+                    $.ajax({
+                        url: "/user/login" ,    //请求的url地址
+                        type: "POST",   //请求方式
+                        data: param,
+                        success: function (res) {
+                            if (res.code != 0) {
+                                showError(res.datas)
+                                $("#resetBtn").click()
+                            }else{
+                                window.location.href="/"
+                            }
+                        },
+                        error: function () {
+                            showError("登录失败")
+                            $("#resetBtn").click()
+                            // console.error("login error")
+                        }
+                    });
+                })
+            })
+            function showError(msg) {
+                $(".alert-danger").text(msg)
+                $(".alert-danger").show()
+            }
+        </script>
+    {{template "footer" }}
+{{end}}

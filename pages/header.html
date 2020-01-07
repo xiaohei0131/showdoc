@@ -1,0 +1,73 @@
+{{define "header"}}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>文档中心--{{.title}}</title>
+        <link rel="stylesheet" href="/static/plugins/bootstrap-4.4.1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/static/plugins/bootstrap-treeview/bootstrap-treeview.min.css">
+        <link rel="stylesheet" href="/static/css/index.css">
+        <script src="/static/js/jquery-3.4.1.min.js"></script>
+        {{/*<script src="/static/js/moment.min.js"></script>*/}}
+        <script src="/static/plugins/bootstrap-4.4.1/js/bootstrap.bundle.min.js"></script>
+        <script src="/static/plugins/bootstrap-treeview/bootstrap-treeview.min.js"></script>
+        <style>
+            /* return top */
+            #btnTop {
+                display: none;
+                position: fixed;
+                bottom: 20px;
+                right: 30px;
+                z-index: 99;
+                border: none;
+                outline: none;
+                background-color: #89cff0;
+                color: white;
+                cursor: pointer;
+                padding: 15px;
+                border-radius: 10px;
+            }
+            #btnTop:hover {
+                background-color: #1E90FF;
+            }
+        </style>
+        <script>
+            // 当网页向下滑动 20px 出现"返回顶部" 按钮
+            window.onscroll = function() {
+                scrollFunction()
+            };
+
+            function scrollFunction() {
+                if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                    document.getElementById("btnTop").style.display = "block";
+                } else {
+                    document.getElementById("btnTop").style.display = "none";
+                }
+            }
+
+            // 点击按钮，返回顶部
+            function returnTop() {
+                document.body.scrollTop = 0;
+                document.documentElement.scrollTop = 0;
+            }
+        </script>
+    </head>
+    <body>
+    <button onclick="returnTop()" id="btnTop" title="返回顶部">返回顶部</button>
+    {{if ne "登录" .title}}
+        <div class="float-right">
+            {{if .username}}
+                {{if eq "用户管理" .title}}
+                    <a class="btn btn-link mr-0" href="/"> 首页</a>
+                {{else}}
+                    {{if eq "admin" .role}}
+                        <a class="btn btn-link mr-0" href="/users"> 用户管理</a>
+                    {{end}}
+                {{end}}
+                <button class="btn btn-link" onclick="logout()"> {{.username}}&nbsp;退出</button>
+            {{else}}
+                <a class="btn btn-link" href="/login"> 登录</a>
+            {{end }}
+        </div>
+    {{end }}
+{{end}}

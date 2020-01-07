@@ -1,0 +1,228 @@
+{{define "index.html"}}
+    {{template "header" .}}
+    <link rel="stylesheet" href="/static/css/github-markdown.css">
+    <link rel="stylesheet" href="/static/plugins/bootstrap-fileinput/css/fileinput.min.css">
+    <script src="/static/plugins/bootstrap-fileinput/js/fileinput.min.js"></script>
+    <script src="/static/js/marked.min.js"></script>
+    <script src="/static/js/insert-textarea.js"></script>
+    <script src="/static/js/index.js"></script>
+    {{$role := .role}}
+    <div class="container-fluid">
+        <blockquote class="blockquote">
+            <p class="mb-0">文档中心</p>
+            <footer class="blockquote-footer">算法研究归档 <cite title="Source Title">人脸识别、行人识别</cite> 等</footer>
+        </blockquote>
+        <hr class="my-4">
+        <div class="btn-toolbar" role="toolbar">
+            {{if ne "" $role}}
+                <div class="btn-group" role="group" aria-label="Basic example">
+                    {{if eq "admin" $role}}
+                        <button type="button" class="btn btn-primary" onclick="addDir()">创建目录</button>
+                        <button type="button" class="btn btn-primary" onclick="gotoDelete('dir')">删除目录</button>
+                        <button type="button" class="btn btn-primary" onclick="editDir()">修改目录</button>
+                    {{end}}
+                    <button type="button" class="btn btn-primary" onclick="addFile()">创建文件</button>
+                </div>
+            {{end }}
+        </div>
+        <div class="row mt-4">
+
+            <div class="col-2">
+                <div id="tree"></div>
+            </div>
+            <div class="col-sm-10">
+                <p class="lead"><span  id="fname"></span>
+                    <button id="editFile" class="btn btn-link fileBtn" onclick="gotoEdit()">修改</button>
+                    <button id="delFile" class="btn btn-link fileBtn" onclick="gotoDelete('file')">删除</button>
+                    <button id="renameFile" class="btn btn-link fileBtn" onclick="gotoRename()">重命名</button>
+                </p>
+                <input type="hidden" id="curEditable" />
+                <hr class="my-auto">
+                <div id="docContent" class="markdown-body"></div>
+                <div id="rs" class="col-md-12">
+                    <textarea class="comments"></textarea>
+                    <button class="btn btn-primary" onclick="saveEdit()">保存</button>
+                    <button class="btn btn-secondary" onclick="cancelEdit()">取消</button>
+                    <button class="btn btn-info" onclick="insertPic()">插入图片</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {{template "footer" }}
+    <div style="position:absolute; top: 0; left:48%">
+        <div class="alert alert-danger" id="errorMsg" role="alert"></div>
+        <div class="alert alert-success" id="successMsg" role="alert"></div>
+    </div>
+    <div class="modal fade" tabindex="-1" role="dialog" id="dirModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">添加目录</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">×</span> </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group row">
+                            <label for="dirPath" class="col-sm-2 col-form-label">路径</label>
+                            <div class="col-sm-10" >
+                                <input type="text" readonly class="form-control-plaintext" id="dirPath" value="">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="dirName" class="col-sm-2 col-form-label">目录名</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="dirName" placeholder="请输入目录名">
+                                <input type="hidden" id="dirRealPath">
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="button" class="btn btn-primary" onclick="saveDir()">保存</button>
+                            {{/*<button type="reset" class="btn btn-secondary">重置</button>*/}}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="dirRenameModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">修改目录</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">×</span> </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group row">
+                            <label for="dirName" class="col-sm-2 col-form-label">目录名</label>
+                            <div class="col-sm-10 input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="prefix"></span>
+                                </div>
+                                <input type="text" class="form-control" id="dirName" aria-describedby="prefix">
+                                <input type="hidden" id="oldPath">
+                                <input type="hidden" id="oldName">
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="button" class="btn btn-primary" onclick="renameDir()">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="fileModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">添加文件</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">×</span> </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group row">
+                            <label for="filePath" class="col-sm-2 col-form-label">路径</label>
+                            <div class="col-sm-10" >
+                                <input type="text" readonly class="form-control-plaintext" id="filePath" value="">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="username" class="col-sm-2 col-form-label">文件名</label>
+                            <div class="col-sm-10 input-group">
+                                <input type="text" class="form-control" id="fileName"  aria-describedby="basic-addon2" placeholder="请输入文件名">
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id="basic-addon2">.md</span>
+                                </div>
+                                <input type="hidden" id="fileRealPath">
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="button" class="btn btn-primary" onclick="saveFile()">保存</button>
+                            {{/*<button type="reset" class="btn btn-secondary">重置</button>*/}}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="fileRenameModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">修改文件</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">×</span> </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group row">
+                            <label for="dirName" class="col-sm-2 col-form-label">文件名</label>
+                            <div class="col-sm-10 input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="prefix"></span>
+                                </div>
+                                <input type="text" class="form-control" id="fileName" >
+                                <div class="input-group-append">
+                                    <span class="input-group-text">.md</span>
+                                </div>
+                                <input type="hidden" id="oldPath">
+                                <input type="hidden" id="oldName">
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="button" class="btn btn-primary" onclick="renameFile()">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="delModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">删除提示</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <span id="delMsg"></span>
+                    <input type="hidden" id="delPath">
+                    <input type="hidden" id="delType">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="delFileOrDir()">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="imgModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">插入图片</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                </div>
+                <div class="modal-footer">
+                    {{/*<button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>*/}}
+                    {{/*<button type="button" class="btn btn-primary" onclick="delFileOrDir()">确定</button>*/}}
+                </div>
+            </div>
+        </div>
+    </div>
+{{end}}
