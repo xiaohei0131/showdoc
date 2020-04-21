@@ -29,6 +29,8 @@ function getTree() {
             }
             $("#tree").treeview({
                 data: treeData,
+                collapseIcon:"fa fa-minus",
+                expandIcon:"fa fa-plus",
                 onNodeSelected: function (event, node) {
                     if (node.type == "group") {
                         return
