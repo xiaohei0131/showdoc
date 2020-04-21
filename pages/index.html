@@ -1,16 +1,13 @@
 {{define "index.html"}}
     {{template "header" .}}
-    {{/*<link rel="stylesheet" href="/static/css/github-markdown.css">*/}}
     <link rel="stylesheet" href="/static/plugins/bootstrap-fileinput/css/fileinput.min.css">
     <script src="/static/plugins/bootstrap-fileinput/js/fileinput.min.js"></script>
-    {{/*<script src="/static/js/marked.min.js"></script>*/}}
-    {{/*<script src="/static/js/insert-textarea.js"></script>*/}}
     <script src="/static/js/index.js"></script>
     {{$role := .role}}
     <div class="container-fluid">
         <blockquote class="blockquote">
-            <p class="mb-0">文档中心1</p>
-            <footer class="blockquote-footer">算法研究归档 <cite title="Source Title">人脸识别、行人识别</cite> 等</footer>
+            <p class="mb-0">文档中心</p>
+            <footer class="blockquote-footer">项目API文档，Markdown语法支持 {{/*<cite title="Source Title">人脸识别、行人识别</cite> 等*/}}</footer>
         </blockquote>
         <hr class="my-4">
         <div class="btn-toolbar" role="toolbar">
