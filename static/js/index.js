@@ -129,7 +129,7 @@ function gotoEdit() {
     $("#docContent").hide();
     $("#rs").show();
     $("#rsbtn").show();
-    if(mdEdit || !docCont){
+    if(mdEdit || docCont==undefined){
         return;
     }
     mdEdit = editormd("rs", {
