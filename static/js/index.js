@@ -2,6 +2,7 @@ $(function () {
     $(".alert").hide();
     $(".fileBtn").hide();
     $("#rs").hide();
+    $("#rsbtn").hide();
     init();
 
 
@@ -66,16 +67,20 @@ function getNodes(nodes) {
     }
     return treeData;
 }
-
+var mdEdit = undefined;
+var docCont = undefined;
 /**
  * 查询文件内容
  * @param path
  */
 function getContent(editable, path, fname) {
-    $("#docContent").show();
-    $("#rs").hide();
+    $("#docContent").empty().show();
+    $("#rs").empty().hide();
+    $("#rsbtn").hide();
     $("#curEditable").val("");
     $(".fileBtn").hide();
+    mdEdit = undefined;
+    docCont = undefined;
     $.ajax({
         url: "/doc/detail?path=" + path,    //请求的url地址
         type: "GET",   //请求方式
@@ -86,11 +91,13 @@ function getContent(editable, path, fname) {
                 $("#curEditable").val(path);
                 if (editable) {
                     $(".fileBtn").show();
-                    $("#rs textarea").val(res.datas);
+                    // $("#rs textarea").val(res.datas);
+                    docCont = res.datas;
                 } else {
                     $(".fileBtn").hide();
                 }
-                $("#docContent").html(marked(res.datas));
+                preview(res.datas);
+                // $("#docContent").html(marked(res.datas));
             }
         },
         error: function () {
@@ -98,7 +105,19 @@ function getContent(editable, path, fname) {
         }
     });
 }
-
+function preview(data) {
+    $("#docContent").empty();
+    editormd.markdownToHTML("docContent", {
+        markdown        : data ,
+        htmlDecode      : "style,script,iframe",  // you can filter tags decode
+        tocm            : true,    // Using [TOCM]
+        emoji           : true,
+        taskList        : true,
+        tex             : true,  // 默认不解析
+        flowChart       : true,  // 默认不解析
+        sequenceDiagram : true,  // 默认不解析
+    });
+}
 function gotoEdit() {
     var editFilePath = $("#curEditable").val();
     if (editFilePath == "") {
@@ -107,6 +126,52 @@ function gotoEdit() {
     }
     $("#docContent").hide();
     $("#rs").show();
+    $("#rsbtn").show();
+    if(mdEdit || !docCont){
+        return;
+    }
+    mdEdit = editormd("rs", {
+        width: "100%",
+        // autoHeight : true,
+        height : 750,
+        path : '/static/plugins/editor.md/lib/',
+        theme : "dark",
+        previewTheme : "dark",
+        editorTheme : "pastel-on-dark",
+        markdown : docCont,
+        codeFold : true,
+        //syncScrolling : false,
+        saveHTMLToTextarea : true,    // 保存 HTML 到 Textarea
+        searchReplace : true,
+        //watch : false,                // 关闭实时预览
+        htmlDecode : "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启
+        //toolbar  : false,             //关闭工具栏
+        //previewCodeHighlight : false, // 关闭预览 HTML 的代码块高亮，默认开启
+        emoji : true,
+        taskList : true,
+        tocm            : true,         // Using [TOCM]
+        tex : true,                   // 开启科学公式TeX语言支持，默认关闭
+        flowChart : true,             // 开启流程图支持，默认关闭
+        sequenceDiagram : true,       // 开启时序/序列图支持，默认关闭,
+        //dialogLockScreen : false,   // 设置弹出层对话框不锁屏，全局通用，默认为true
+        //dialogShowMask : false,     // 设置弹出层对话框显示透明遮罩层，全局通用，默认为true
+        //dialogDraggable : false,    // 设置弹出层对话框不可拖动，全局通用，默认为true
+        //dialogMaskOpacity : 0.4,    // 设置透明遮罩层的透明度，全局通用，默认值为0.1
+        //dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为#fff
+        imageUpload : true,
+        imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+        imageUploadURL : "/manage/img/upload",
+        onload : function() {
+            //this.fullscreen();
+            //this.unwatch();
+            //this.watch().fullscreen();
+
+            //this.setMarkdown("#PHP");
+            //this.width("100%");
+            // this.height(740);
+            // this.resize("100%", 740);
+        }
+    });
 }
 
 function saveEdit() {
@@ -115,17 +180,19 @@ function saveEdit() {
         showErrorMsg("权限不足");
         return;
     }
-    var newContent = $("#rs textarea").val();
+    // var newContent = $("#rs textarea").val();
+    docCont = mdEdit.getMarkdown();
     $.ajax({
         url: "/manage/file/edit",    //请求的url地址
         type: "POST",   //请求方式
         data: {
             "filepath": editFilePath,
-            "content": newContent
+            "content": docCont
         },
         success: function (res) {
             if (res.code == 0) {
                 showSuccessMsg(res.datas)
+                /*debugger
                 let selectedNodes = $("#tree").data('treeview').getSelected();
                 let nodeId = 0;
                 if (selectedNodes && selectedNodes.length > 0) {
@@ -133,10 +200,12 @@ function saveEdit() {
                 }
                 getTree();
                 $('#tree').treeview('revealNode', [nodeId, {silent: true}]);
-                $('#tree').treeview('expandNode', [nodeId, {silent: true}]);
+                $('#tree').treeview('selectNode', [nodeId, {silent: true}]);*/
                 $("#docContent").show();
                 $("#rs").hide();
-                $("#docContent").html(marked(newContent))
+                $("#rsbtn").hide();
+                preview(docCont);
+                // $("#docContent").html(marked(newContent))
             } else {
                 showErrorMsg(res.datas)
             }
@@ -150,48 +219,9 @@ function saveEdit() {
 function cancelEdit() {
     $("#docContent").show();
     $("#rs").hide();
+    $("#rsbtn").hide();
 }
 
-function insertPic() {
-    var fid = new Date().getTime();
-    var inp = '<input id="'+fid+'" type="file" name="image" class="file">';
-    $('#imgModal .modal-body').html(inp);
-    var fileInput = $("#"+fid);
-    fileInput.fileinput({
-        language: 'zh',                                         //设置语言
-        uploadUrl: "/manage/img/upload",                                   //上传的地址
-        allowedFileExtensions: ['jpg', 'gif', 'png', 'jpeg'],    //接收的文件后缀
-        showUpload: true,                                       //是否显示上传按钮
-        showRemove : true,                                      //显示移除按钮
-        showPreview : true,                                     //是否显示预览
-        showCaption: false,                                     //是否显示标题
-        browseClass: "btn btn-primary",                         //按钮样式
-        uploadAsync: true,                                      //默认异步上传
-        //dropZoneEnabled: false,                               //是否显示拖拽区域
-        //minImageWidth: 50,                                    //图片的最小宽度
-        //minImageHeight: 50,                                   //图片的最小高度
-        //maxImageWidth: 1000,                                  //图片的最大宽度
-        //maxImageHeight: 1000,                                 //图片的最大高度
-        //maxFileSize: 0,                                       //单位为kb，如果为0表示不限制文件大小
-        //minFileCount: 0,
-        maxFileCount: 1,                                       //表示允许同时上传的最大文件个数
-        enctype: 'multipart/form-data',
-        validateInitialCount:true,
-        previewFileIcon: "<i class='glyphicon glyphicon-king'></i>",
-        msgFilesTooMany: "选择上传的文件数量({n}) 超过允许的最大数值{m}！"
-    });
-    fileInput.on('fileuploaded', function(event, data, previewId, index){
-        console.log(data)
-        var response = data.response;
-        if(response.code == 0) {
-            var picUrl = response.datas;
-            // $(".comments").insertAtCaret('![]('+picUrl+')');
-            $(".comments").insertAtCaret('<img src="'+picUrl+'" width="300" height="400"/>');
-        }
-        $('#imgModal').modal("hide")
-    });
-    $('#imgModal').modal("show")
-}
 
 function gotoDelete(obj) {
     if (obj == "file") {

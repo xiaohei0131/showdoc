@@ -170,6 +170,7 @@ func AddDirHandler(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 	}
 }
+
 func DeleteDirHandler(c *gin.Context) {
 	if !isAdmin(c) {
 		res := Result{Code: -1, Datas: "非管理员不可删除目录"}
@@ -220,29 +221,37 @@ func pathExists(path string) bool {
 	return false
 }
 
+type UploadRes struct {
+	Success  int         `json:"success"`
+	Message string `json:"message"`
+	Url string `json:"url"`
+}
+
 func FileuploadHandler(c *gin.Context) {
+	res := UploadRes{Success: 0}
 	//得到上传的文件
-	file, header, err := c.Request.FormFile("image") //image这个是uplaodify参数定义中的   'fileObjName':'image'
+	file, header, err := c.Request.FormFile("editormd-image-file") //image这个是uplaodify参数定义中的   'fileObjName':'image'
 	if err != nil {
-		c.String(http.StatusBadRequest, "Bad request")
-		return
-	}
-	//文件的名称
-	filename := header.Filename
-	filePrefix := strconv.FormatInt(time.Now().UnixNano(), 10)
-	path := "static/upload/" + filePrefix + "_" + filename
-	//创建文件
-	out, err := os.Create(path)
-	res := Result{Code: 0, Datas: "/" + path}
-	if err != nil {
-		res.Code = -1
-		res.Datas = err.Error()
-	}
-	defer out.Close()
-	_, err = io.Copy(out, file)
-	if err != nil {
-		res.Code = -1
-		res.Datas = err.Error()
+		res.Message = "Bad request"
+	}else {
+		//文件的名称
+		filename := header.Filename
+		filePrefix := strconv.FormatInt(time.Now().UnixNano(), 10)
+		path := "static/upload/" + filePrefix + "_" + filename
+		//创建文件
+		out, err := os.Create(path)
+		res.Success = 1
+		res.Url = "/" + path
+		if err != nil {
+			res.Success = 0
+			res.Message = err.Error()
+		}
+		defer out.Close()
+		_, err = io.Copy(out, file)
+		if err != nil {
+			res.Success = 0
+			res.Message = err.Error()
+		}
 	}
 	c.JSON(http.StatusOK, res)
 }

@@ -1,15 +1,15 @@
 {{define "index.html"}}
     {{template "header" .}}
-    <link rel="stylesheet" href="/static/css/github-markdown.css">
+    {{/*<link rel="stylesheet" href="/static/css/github-markdown.css">*/}}
     <link rel="stylesheet" href="/static/plugins/bootstrap-fileinput/css/fileinput.min.css">
     <script src="/static/plugins/bootstrap-fileinput/js/fileinput.min.js"></script>
-    <script src="/static/js/marked.min.js"></script>
-    <script src="/static/js/insert-textarea.js"></script>
+    {{/*<script src="/static/js/marked.min.js"></script>*/}}
+    {{/*<script src="/static/js/insert-textarea.js"></script>*/}}
     <script src="/static/js/index.js"></script>
     {{$role := .role}}
     <div class="container-fluid">
         <blockquote class="blockquote">
-            <p class="mb-0">文档中心</p>
+            <p class="mb-0">文档中心1</p>
             <footer class="blockquote-footer">算法研究归档 <cite title="Source Title">人脸识别、行人识别</cite> 等</footer>
         </blockquote>
         <hr class="my-4">
@@ -38,12 +38,12 @@
                 </p>
                 <input type="hidden" id="curEditable" />
                 <hr class="my-auto">
-                <div id="docContent" class="markdown-body"></div>
+                <div id="docContent"></div>
                 <div id="rs" class="col-md-12">
-                    <textarea class="comments"></textarea>
+                </div>
+                <div id="rsbtn" class="col-md-12 text-center">
                     <button class="btn btn-primary" onclick="saveEdit()">保存</button>
                     <button class="btn btn-secondary" onclick="cancelEdit()">取消</button>
-                    <button class="btn btn-info" onclick="insertPic()">插入图片</button>
                 </div>
             </div>
 
